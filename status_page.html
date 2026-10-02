@@ -1,0 +1,267 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>ADRIAN · סטטוס מערכת</title>
+<style>
+  :root {
+    --bg: #070c14;
+    --panel: #0b141f;
+    --panel-2: #0d1926;
+    --line: #1a3c4e;
+    --grid: rgba(15, 40, 55, .55);
+    --cyan: #00e2ff;
+    --cyan-soft: #5de8ff;
+    --green: #44ffad;
+    --red: #ff5370;
+    --amber: #ffc857;
+    --white: #ebf7ff;
+    --muted: #8099ad;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; }
+  body {
+    background:
+      radial-gradient(520px 320px at 85% -80px, rgba(0, 174, 255, .22), transparent 70%),
+      linear-gradient(var(--grid) 1px, transparent 1px) 0 0 / 40px 40px,
+      linear-gradient(90deg, var(--grid) 1px, transparent 1px) 0 0 / 40px 40px,
+      var(--bg);
+    color: var(--white);
+    font-family: "Segoe UI", system-ui, -apple-system, "Rubik", Arial, sans-serif;
+    min-height: 100vh;
+    padding: 20px 16px 40px;
+  }
+  .wrap { max-width: 560px; margin: 0 auto; }
+
+  header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 18px; }
+  .brand { direction: ltr; }
+  .brand h1 { margin: 0; font-size: 30px; letter-spacing: 1px; color: var(--cyan); font-weight: 800; }
+  .brand small { color: var(--muted); font-size: 12px; letter-spacing: 2px; }
+  .time { direction: ltr; color: var(--muted); font-weight: 700; font-size: 14px; padding-top: 6px; }
+
+  .banner {
+    display: flex; align-items: center; gap: 12px;
+    background: var(--panel); border: 1.5px solid var(--cyan); border-radius: 18px;
+    padding: 14px 16px; margin-bottom: 14px;
+  }
+  .banner .dot { width: 14px; height: 14px; border-radius: 50%; flex: none; }
+  .banner b { display: block; font-size: 17px; }
+  .banner span { color: var(--muted); font-size: 13px; }
+
+  .metrics { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 18px; }
+  .metric {
+    background: var(--panel-2); border: 1px solid var(--line); border-radius: 16px; padding: 12px;
+    text-align: center; cursor: pointer; transition: border-color .15s;
+  }
+  .metric.sel { border-color: var(--cyan); }
+  .metric .n { font-size: 30px; font-weight: 800; line-height: 1.1; }
+  .metric .l { color: var(--muted); font-size: 12px; }
+
+  .search {
+    width: 100%; background: var(--panel); border: 1px solid var(--line); border-radius: 12px;
+    color: var(--white); padding: 11px 14px; font-size: 15px; margin-bottom: 16px; outline: none;
+  }
+  .search:focus { border-color: var(--cyan); }
+
+  h2 {
+    font-size: 13px; letter-spacing: 1px; color: var(--cyan-soft); margin: 18px 4px 8px;
+    display: flex; justify-content: space-between;
+  }
+  h2 .c { color: var(--muted); }
+
+  .dev {
+    background: var(--panel); border: 1px solid var(--line); border-radius: 14px;
+    padding: 12px 14px; margin-bottom: 8px;
+  }
+  .dev.problem { border-color: rgba(255, 83, 112, .55); }
+  .dev .top { display: flex; align-items: center; gap: 10px; }
+  .dev .dot { width: 11px; height: 11px; border-radius: 50%; flex: none; }
+  .dev .name { font-weight: 700; font-size: 16px; flex: 1; }
+  .dev .state { font-size: 13px; font-weight: 700; }
+  .dev .chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; padding-inline-start: 21px; }
+  .chip {
+    background: var(--panel-2); border: 1px solid var(--line); border-radius: 999px;
+    padding: 3px 10px; font-size: 12px; color: var(--muted);
+  }
+  .chip b { color: var(--white); font-weight: 600; }
+  .detail { color: var(--red); font-size: 13px; margin-top: 6px; padding-inline-start: 21px; }
+
+  .empty { color: var(--muted); text-align: center; padding: 30px 0; }
+  footer { color: var(--muted); font-size: 11px; text-align: center; margin-top: 26px; direction: ltr; letter-spacing: 1px; }
+
+  .on { color: var(--cyan); } .on-bg { background: var(--cyan); }
+  .off { color: var(--muted); } .off-bg { background: #3b5568; }
+  .bad { color: var(--red); } .bad-bg { background: var(--red); box-shadow: 0 0 10px rgba(255,83,112,.7); }
+  .ok { color: var(--green); } .ok-bg { background: var(--green); box-shadow: 0 0 10px rgba(68,255,173,.6); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="brand"><h1>ADRIAN</h1><small>SYSTEM STATUS</small></div>
+    <div class="time" id="time"></div>
+  </header>
+
+  <div class="banner">
+    <div class="dot" id="bannerDot"></div>
+    <div><b id="bannerTitle"></b><span id="bannerSub"></span></div>
+  </div>
+
+  <div class="metrics">
+    <div class="metric" data-filter="on"><div class="n on" id="nOn"></div><div class="l">דולקים</div></div>
+    <div class="metric" data-filter="off"><div class="n off" id="nOff" style="color:var(--cyan-soft)"></div><div class="l">כבויים</div></div>
+    <div class="metric" data-filter="problem"><div class="n" id="nBad"></div><div class="l">תקלות</div></div>
+  </div>
+
+  <input class="search" id="search" placeholder="חיפוש מכשיר או חדר…" autocomplete="off">
+
+  <div id="list"></div>
+
+  <footer>ADRIAN // HOME AI ASSISTANT</footer>
+</div>
+
+<script>
+// הבוט שולח את המצב בתוך הקישור (?d=...). בלי נתונים - מוצגת דוגמה.
+const SAMPLE = {
+  time: "22:21",
+  devices: [
+    { name: "מזגן סלון", category: "מזגן", state: "unavailable", detail: "מנותק (נראה לאחרונה לפני 12 דקות)" },
+    { name: "מזגן חדר עבודה", category: "מזגן", state: "on", target: 22, room_temp: 24.5, fan: "חזק", mode: "קירור", timer: "נכבה בעוד 40 דקות" },
+    { name: "מזגן חדר שינה", category: "מזגן", state: "on", target: 21, room_temp: 23, fan: "חלש", mode: "קירור" },
+    { name: "דוד שמש", category: "Switcher", state: "on", detail_ok: "נכבה בעוד 25 דקות" },
+    { name: "תאורת סלון", category: "תאורה", state: "on", detail_ok: "בהירות 70%" },
+    { name: "תאורת מטבח", category: "תאורה", state: "off" },
+    { name: "טלוויזיה סלון", category: "מדיה", state: "off" },
+    { name: "מזגן חדר ילדים", category: "מזגן", state: "off", room_temp: 25 },
+    { name: "מחשב עבודה", category: "מחשבים", state: "on", detail_ok: "פעיל 3 שעות" },
+  ],
+};
+
+// מפתחות קצרים מהבוט -> שמות מלאים
+const KEYS = { n: "name", s: "state", c: "category", d: "detail", t: "room_temp",
+               g: "target", f: "fan", m: "mode", r: "timer", x: "detail_ok" };
+
+function readData() {
+  // טלגרם משתמש בחלק שאחרי # לנתונים שלו, ולכן המצב מגיע ב-?d=
+  const raw = new URLSearchParams(location.search).get("d");
+  if (!raw) return SAMPLE;
+  try {
+    let b64 = raw.replace(/-/g, "+").replace(/_/g, "/");
+    while (b64.length % 4) b64 += "=";
+    const bytes = Uint8Array.from(atob(b64), ch => ch.charCodeAt(0));
+    const packed = JSON.parse(new TextDecoder("utf-8").decode(bytes));
+    return {
+      time: packed.tm || "",
+      devices: (packed.v || []).map(item => {
+        const device = {};
+        for (const [key, value] of Object.entries(item)) device[KEYS[key] || key] = value;
+        return device;
+      }),
+    };
+  } catch (e) {
+    return { time: "", devices: [], error: true };
+  }
+}
+
+const data = readData();
+if (data.error) {
+  document.body.innerHTML = '<div class="empty" style="padding:60px 16px">לא הצלחתי לקרוא את מצב המכשירים. לחץ שוב על "סטטוס" בטלגרם.</div>';
+  throw new Error("bad data");
+}
+const isProblem = d => d.state === "unavailable" || d.state === "error";
+let filter = null;
+
+document.getElementById("time").textContent = data.time || "";
+
+const problems = data.devices.filter(isProblem);
+const on = data.devices.filter(d => d.state === "on");
+const off = data.devices.filter(d => d.state === "off");
+
+document.getElementById("nOn").textContent = on.length;
+document.getElementById("nOff").textContent = off.length;
+const nBad = document.getElementById("nBad");
+nBad.textContent = problems.length;
+nBad.className = "n " + (problems.length ? "bad" : "ok");
+
+const bannerDot = document.getElementById("bannerDot");
+if (problems.length) {
+  bannerDot.className = "dot bad-bg";
+  document.getElementById("bannerTitle").textContent =
+    problems.length === 1 ? "יש תקלה שדורשת טיפול" : "יש תקלות שדורשות טיפול";
+  document.getElementById("bannerTitle").className = "bad";
+  document.getElementById("bannerSub").textContent = problems.length === 1 ? "תקלה אחת" : problems.length + " תקלות";
+} else {
+  bannerDot.className = "dot ok-bg";
+  document.getElementById("bannerTitle").textContent = "הכול תקין";
+  document.getElementById("bannerTitle").className = "ok";
+  document.getElementById("bannerSub").textContent = "כל המכשירים מחוברים";
+}
+
+function esc(s) {
+  return String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+}
+
+function deviceHtml(d) {
+  const bad = isProblem(d);
+  const cls = bad ? "bad" : (d.state === "on" ? "on" : "off");
+  const STATE_LABELS = { unavailable: "תקלה", error: "שגיאה", on: "דולק", off: "כבוי" };
+  const label = STATE_LABELS[d.state] || (bad ? "תקלה" : "כבוי");
+  const chips = [];
+  if (d.category) chips.push(`<span class="chip">${esc(d.category)}</span>`);
+  if (d.target != null) chips.push(`<span class="chip">יעד <b>${esc(d.target)}°</b></span>`);
+  if (d.room_temp != null) chips.push(`<span class="chip">בחדר <b>${esc(d.room_temp)}°</b></span>`);
+  if (d.fan) chips.push(`<span class="chip">מאוורר <b>${esc(d.fan)}</b></span>`);
+  if (d.mode) chips.push(`<span class="chip">${esc(d.mode)}</span>`);
+  if (d.timer) chips.push(`<span class="chip">⏱ <b>${esc(d.timer)}</b></span>`);
+  if (d.detail_ok) chips.push(`<span class="chip"><b>${esc(d.detail_ok)}</b></span>`);
+  return `
+    <div class="dev ${bad ? "problem" : ""}">
+      <div class="top">
+        <div class="dot ${cls}-bg"></div>
+        <div class="name">${esc(d.name)}</div>
+        <div class="state ${cls}">${label}</div>
+      </div>
+      ${bad && d.detail ? `<div class="detail">${esc(d.detail)}</div>` : ""}
+      ${chips.length ? `<div class="chips">${chips.join("")}</div>` : ""}
+    </div>`;
+}
+
+function render() {
+  const q = document.getElementById("search").value.trim();
+  const match = d => !q || d.name.includes(q) || (d.category || "").includes(q);
+  const groups = [
+    ["problem", "תקלות", problems],
+    ["on", "דולקים", on],
+    ["off", "כבויים", off],
+  ];
+  let html = "";
+  for (const [key, title, items] of groups) {
+    if (filter && filter !== key) continue;
+    const shown = items.filter(match);
+    if (!shown.length) continue;
+    html += `<h2><span>${title}</span><span class="c">${shown.length}</span></h2>`;
+    html += shown.map(deviceHtml).join("");
+  }
+  document.getElementById("list").innerHTML = html || `<div class="empty">לא נמצאו מכשירים</div>`;
+}
+
+document.querySelectorAll(".metric").forEach(el => {
+  el.addEventListener("click", () => {
+    filter = filter === el.dataset.filter ? null : el.dataset.filter;
+    document.querySelectorAll(".metric").forEach(m => m.classList.toggle("sel", m.dataset.filter === filter));
+    render();
+  });
+});
+document.getElementById("search").addEventListener("input", render);
+
+// בתוך טלגרם: מתאים את הצבעים והכפתורים לחלון של טלגרם.
+if (window.Telegram && Telegram.WebApp) {
+  Telegram.WebApp.ready();
+  Telegram.WebApp.expand();
+}
+
+render();
+</script>
+</body>
+</html>
